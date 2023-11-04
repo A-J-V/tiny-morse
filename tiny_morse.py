@@ -1,48 +1,28 @@
-"""Converts a text string to morse code that can be
-executed as a series of signal flashes.
-
-Morse code is represented here by basic functions that transmit or pause
-a signal for a specific duration. A text character is encoded in morse
-as a list of these basic functions. By executing the list of functions in
-order, the morse code of the text character is transmitted. A large text
-string is simply a longer list of basic morse functions comprising the
-text and necessary signal pauses.
-
-The workflow is to pass a string to the string_to_morse() function to get
-a morse code list. Then pass the list of morse code to the transmit()
-function to execute it.
-
-This is a minimal script that was written to flash an LED using
-a Raspberry Pi Pico. The transmitter here is just a Pico Pin. By modifying
-the transmitter to send a different signal than toggling a Pico Pin, this
-script can be easily extended to another use case.
-"""
-
-
-
 from machine import Pin
 from time import sleep
 
 def dot(signal, period=1):
+    """Represents a 'dot' in Morse code."""
     signal.value(1)
     sleep(period)
     signal.value(0)
     
 def dash(signal, period=1):
+    """Represents a 'dash' in Morse code."""
     signal.value(1)
     sleep(period*3)
     signal.value(0)
     
 def s(_signal=None, period=1):
-    """Used within encoded characters"""
+    """A short pause used within encoded characters"""
     sleep(period)
     
 def m(_signal=None, period=1):
-    """Used between characters in a word"""
+    """A medium pause used between characters in a word"""
     sleep(period*3)
     
 def l(_signal=None, period=1):
-    """Used between words"""
+    """A long pause used between words"""
     sleep(period*7)
     
 string_to_morse_dict = {
@@ -96,9 +76,20 @@ string_to_morse_dict = {
     '-': [dash, s, dot, s, dot, s, dot, s, dot, s, dash],
     '\"':[dot, s, dash, s, dot, s, dot, s, dash, s, dot],
     '@': [dot, s, dash, s, dash, s, dot, s, dash, s, dot],
+    '!': [dash, s, dot, s, dash, s, dot, s, dash, s, dash],
+    '&': [dot, s, dash, s, dot, s, dot, s, dot],
+    ';': [dash, s, dot, s, dash, s, dot, s, dash, s, dot],
+    '_': [dot, s, dot, s, dash, s, dash, dot, s, dash],
+    '$': [dot, s, dot, s, dot, s, dash, s, dot, s, dot, s, dash]
     }
 
 def string_to_morse(string):
+    """
+    Converts a string to an executable list of Morse functions.
+
+    :param string: The string to translate to Morse code.
+    :return: A list of elementary Morse functions.
+    """
     morse = []
     string = string.lower()
     for character in string:
@@ -107,18 +98,33 @@ def string_to_morse(string):
     return [signal for character in morse
             for signal in character]
 
-def transmit(morse, output):
-    for signal in morse:
-        signal(output, period=0.2)
+def transmit(morse, output, period=0.2):
+    """
+    Transmit Morse code through the output by sequentially executing the functions in the arg "morse".
+
+    :param morse: A list of executable functions representing Morse code.
+    :param output: The device to which the Morse should be output. This script is written assuming that
+                   the output is a Raspberry Pi Pico W.
+    :param period: The base speed of transmission in seconds (using Pico W MicroPython time.sleep).
+    """
+    for code in morse:
+        code(output, period=period)
 
 
 def validate(output):
     """Used for debugging to transmit every possible character."""
-    validation_characters = "abcdefghijklmnopqrstuvwxyz1234567890 .,?\'/():=+-\"@"
+    validation_characters = "abcdefghijklmnopqrstuvwxyz1234567890 .,?\'/():=+-\"@!&;_$"
     morse_validation = string_to_morse(validation_characters)
     transmit(morse_validation, output)
     print("Validation complete.")
 
-signal = Pin('LED', Pin.OUT)
-signal.value(0)
-validate(signal)
+
+def send_morse(input_string, output_device, period=0.2):
+    """Translate the input string to Morse code then outputs the code to output_device."""
+    morse_list = string_to_morse(input_string)
+    transmit(morse_list, output_device, period=period)
+
+
+device = Pin('LED', Pin.OUT)
+device.value(0)
+validate(device)
