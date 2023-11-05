@@ -10,7 +10,7 @@
 
 ## What this script cannot do:
 * Work on any arbitrary microcontroller. Every device has specific requirements, you'll likely need to adapt the script to your device if it isn't a RPI Pico W.
-* Translate characters that are not in English Morse. You cannot include, e.g., emojis, arrows <>, or umlauts.
+* Translate characters that are not in the standard Latin alphabet, or considered standard punctuation in Morse. You cannot include, e.g., emojis, arrows <>, or umlauts.
 
 ## What this script can do with a little modification:
 * Translate any character if you add the character and the Morse encoding to string_to_morse_dict in the script. This should be fast and easy.
